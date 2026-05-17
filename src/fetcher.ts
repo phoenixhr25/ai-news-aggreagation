@@ -16,7 +16,7 @@ function extractSummary(item: Parser.Item): string {
   const text = stripHtml(raw)
     .replace(/Article URL:\s*\S+/gi, '')
     .replace(/Comments URL:\s*\S+/gi, '')
-    .replace(/Points:\s*\d+[^|]*\|\s*Comments:\s*\d+/gi, '')
+    .replace(/Points:\s*\d+.*?Comments:\s*\d+/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
   if (!text) return '';

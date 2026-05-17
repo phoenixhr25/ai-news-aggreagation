@@ -1,6 +1,6 @@
 # AI News CLI
 
-自动抓取过去 24 小时的 AI 新闻，生成 Markdown 日报。
+自动抓取过去 24 小时的 AI 新闻，用 DeepSeek 挑出今日精选，生成 Markdown 日报。
 
 ## 数据源
 
@@ -16,6 +16,9 @@
 # 安装依赖
 npm install
 
+# 创建 .env 文件
+echo "DEEPSEEK_API_KEY=your_key_here" > .env
+
 # 立即运行一次
 npx tsx src/index.ts
 
@@ -30,9 +33,17 @@ npx tsx src/index.ts --cron
 ```markdown
 # AI 新闻日报 · 2026-05-17
 
-> 共收录 **34** 篇文章，来自 **3** 个源：TechCrunch · The Verge · Hacker News
+> 共收录 35 篇文章，来自 3 个源：Hacker News · The Verge · TechCrunch
+
+## 今日精选
+
+**[文章标题](https://...)**
+> 一句话说明为什么值得关注
+来源：TechCrunch · 10:32
 
 ---
+
+## 全部文章
 
 ### 10:32　TechCrunch
 
@@ -43,15 +54,28 @@ npx tsx src/index.ts --cron
 ---
 ```
 
+## GitHub Actions 自动运行
+
+每天 00:00 UTC（08:00 CST）自动触发，结果提交到仓库 `output/` 目录。
+
+需在仓库 **Settings → Secrets and variables → Actions → Repository secrets** 添加：
+
+| Secret | 说明 |
+|---|---|
+| `DEEPSEEK_API_KEY` | DeepSeek API key，用于生成今日精选 |
+
+未配置 key 时跳过今日精选，仍正常生成全部文章列表。
+
 ## 项目结构
 
 ```
 src/
 ├── index.ts      # 入口，支持 --cron 参数
 ├── fetcher.ts    # RSS 抓取、24h 过滤、去重、摘要提取
+├── curator.ts    # DeepSeek 今日精选
 ├── formatter.ts  # Markdown 生成与文件写入
 └── types.ts      # Article 类型定义
-output/           # 生成的日报（不纳入版本控制）
+output/           # 生成的日报（由 GitHub Actions 提交）
 ```
 
 ## 技术栈
@@ -59,3 +83,4 @@ output/           # 生成的日报（不纳入版本控制）
 - TypeScript + [tsx](https://github.com/privatenumber/tsx)（无需编译）
 - [rss-parser](https://github.com/rbren/rss-parser) — RSS 解析
 - [node-cron](https://github.com/node-cron/node-cron) — 定时调度
+- [openai](https://github.com/openai/openai-node) — DeepSeek API（OpenAI 兼容格式）

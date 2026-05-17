@@ -3,6 +3,7 @@ import type { Article } from './types.js';
 
 export interface Pick {
   article: Article;
+  category: string;
   reason: string;
 }
 
@@ -26,12 +27,16 @@ export async function pickTopArticles(articles: Article[], n = 3): Promise<Pick[
 
 ${list}
 
-从中挑选最值得关注的 ${n} 篇，判断标准：技术突破、行业影响、或对 AI 从业者有实际参考价值。
+从中按以下三个方向各挑一篇，每个方向选最符合的那篇：
+1. 技术前沿：技术突破、新模型、新工具，对 AI 从业者有实际参考价值
+2. 科普选题：适合面向普通人解读，有讨论空间，可作为内容创作素材
+3. 行业动态：大模型公司战略、AI 政策法规、资本市场或就业影响
 
 只返回 JSON 数组，格式如下，不要其他文字：
 [
-  { "index": 0, "reason": "一句话说明为什么值得关注" },
-  ...
+  { "index": 0, "category": "技术前沿", "reason": "一句话说明为什么值得关注" },
+  { "index": 1, "category": "科普选题", "reason": "一句话说明为什么值得关注" },
+  { "index": 2, "category": "行业动态", "reason": "一句话说明为什么值得关注" }
 ]`;
 
   const response = await client.chat.completions.create({
@@ -43,7 +48,7 @@ ${list}
 
   const raw = response.choices[0].message.content ?? '{}';
 
-  let parsed: { index: number; reason: string }[];
+  let parsed: { index: number; category: string; reason: string }[];
   try {
     const obj = JSON.parse(raw);
     parsed = Array.isArray(obj) ? obj : (obj.picks ?? obj.results ?? Object.values(obj)[0]);
@@ -55,5 +60,5 @@ ${list}
   return parsed
     .filter((p) => typeof p.index === 'number' && articles[p.index])
     .slice(0, n)
-    .map((p) => ({ article: articles[p.index], reason: p.reason }));
+    .map((p) => ({ article: articles[p.index], category: p.category ?? '', reason: p.reason }));
 }

@@ -26,6 +26,7 @@ export function generateReport(articles: Article[], now: Date, picks: Pick[] = [
   if (picks.length > 0) {
     lines.push('## 今日精选', '');
     for (const pick of picks) {
+      if (pick.category) lines.push(`**${pick.category}**`);
       lines.push(`**[${pick.article.title}](${pick.article.link})**`);
       lines.push(`> ${pick.reason}`);
       lines.push(`来源：${pick.article.source} · ${toTimeStr(pick.article.pubDate)}`);

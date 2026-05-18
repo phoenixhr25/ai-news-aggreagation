@@ -7,7 +7,7 @@ const FEEDS = [
   { url: 'https://hnrss.org/newest?q=AI&count=30', source: 'Hacker News', retailFilter: false },
   { url: 'https://www.retaildive.com/feeds/news/', source: 'Retail Dive', retailFilter: true },
   { url: 'https://www.modernretail.co/feed/', source: 'Modern Retail', retailFilter: true },
-  { url: 'https://hfndigital.com/feed/', source: 'HFN', retailFilter: true },
+  { url: 'https://www.grocerydive.com/feeds/news/', source: 'Grocery Dive', retailFilter: true },
 ];
 
 const RETAIL_AI_KEYWORDS = [

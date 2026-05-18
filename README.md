@@ -53,6 +53,35 @@ npx tsx src/index.ts --cron
 
 未配置 `NOTION_TOKEN` 时跳过同步，不报错。
 
+### 配置步骤
+
+**1. 创建 Integration**
+
+前往 [notion.so/my-integrations](https://www.notion.so/my-integrations) → New integration → 填写名称 → 提交。
+复制生成的 **Internal Integration Token**，即 `NOTION_TOKEN`。
+
+**2. 准备父页面**
+
+在 Notion 里新建或选择一个页面作为父页面。打开该页面，点击右上角 `...` → **Connect to** → 选择刚创建的 Integration，完成授权。
+
+**3. 获取父页面 ID**
+
+从页面 URL 复制最后一段（32位字符串），即 `NOTION_PAGE_ID`：
+```
+https://notion.so/My-Page-abc123def456...7890
+                   ↑ 这一段去掉连字符后就是 PAGE_ID
+```
+
+**4. 写入配置**
+
+本地运行时写入 `.env`：
+```bash
+echo "NOTION_TOKEN=secret_xxx" >> .env
+echo "NOTION_PAGE_ID=abc123def456..." >> .env
+```
+
+GitHub Actions 时在 Repository secrets 里添加同名变量（见下方）。
+
 ## GitHub Actions 自动运行
 
 每周一 00:00 UTC（08:00 CST）自动触发，周报提交到仓库 `output/` 目录并同步到 Notion。

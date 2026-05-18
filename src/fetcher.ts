@@ -2,10 +2,24 @@ import Parser from 'rss-parser';
 import type { Article } from './types.js';
 
 const FEEDS = [
-  { url: 'https://techcrunch.com/category/artificial-intelligence/feed/', source: 'TechCrunch' },
-  { url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml', source: 'The Verge' },
-  { url: 'https://hnrss.org/newest?q=AI&count=30', source: 'Hacker News' },
+  { url: 'https://techcrunch.com/category/artificial-intelligence/feed/', source: 'TechCrunch', retailFilter: false },
+  { url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml', source: 'The Verge', retailFilter: false },
+  { url: 'https://hnrss.org/newest?q=AI&count=30', source: 'Hacker News', retailFilter: false },
+  { url: 'https://www.retaildive.com/feeds/news/', source: 'Retail Dive', retailFilter: true },
+  { url: 'https://www.modernretail.co/feed/', source: 'Modern Retail', retailFilter: true },
+  { url: 'https://hfndigital.com/feed/', source: 'HFN', retailFilter: true },
 ];
+
+const RETAIL_AI_KEYWORDS = [
+  'ai', 'artificial intelligence', 'machine learning', 'automation',
+  'robot', 'algorithm', 'chatbot', 'generative', 'llm', 'tech',
+  'digital', 'personalization', 'data', 'prediction',
+];
+
+function hasAiKeyword(text: string): boolean {
+  const lower = text.toLowerCase();
+  return RETAIL_AI_KEYWORDS.some((kw) => lower.includes(kw));
+}
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
@@ -25,15 +39,20 @@ function extractSummary(item: Parser.Item): string {
 
 export async function fetchAllArticles(): Promise<Article[]> {
   const parser = new Parser({ timeout: 10000 });
-  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   const results = await Promise.allSettled(
-    FEEDS.map(async ({ url, source }) => {
+    FEEDS.map(async ({ url, source, retailFilter }) => {
       const feed = await parser.parseURL(url);
       return feed.items
         .filter((item) => {
           if (!item.pubDate) return false;
-          return new Date(item.pubDate) > cutoff;
+          if (new Date(item.pubDate) <= cutoff) return false;
+          if (retailFilter) {
+            const text = (item.title ?? '') + ' ' + (item.contentSnippet ?? item.summary ?? '');
+            return hasAiKeyword(text);
+          }
+          return true;
         })
         .map((item): Article => ({
           title: item.title?.trim() || '(no title)',

@@ -7,10 +7,10 @@ export interface Pick {
   reason: string;
 }
 
-export async function pickTopArticles(articles: Article[], n = 3): Promise<Pick[]> {
+export async function pickTopArticles(articles: Article[], n = 4): Promise<Pick[]> {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
-    console.warn('[警告] 未找到 DEEPSEEK_API_KEY，跳过今日精选');
+    console.warn('[警告] 未找到 DEEPSEEK_API_KEY，跳过本周精选');
     return [];
   }
 
@@ -23,20 +23,40 @@ export async function pickTopArticles(articles: Article[], n = 3): Promise<Pick[
     .map((a, i) => `${i}. [${a.source}] ${a.title}`)
     .join('\n');
 
-  const prompt = `你是一个 AI 新闻编辑。以下是今天的 AI 新闻列表：
+  const prompt = `你是一个 AI 与零售行业的内容编辑。以下是本周的文章列表：
 
 ${list}
 
-从中按以下三个方向各挑一篇，每个方向选最符合的那篇：
-1. 技术前沿：技术突破、新模型、新工具，对 AI 从业者有实际参考价值
-2. 科普选题：适合面向普通人解读，有讨论空间，可作为内容创作素材
-3. 行业动态：大模型公司战略、AI 政策法规、资本市场或就业影响
+从中按以下四个方向各挑一篇，每个方向选最符合的那篇：
 
-只返回 JSON 数组，格式如下，不要其他文字：
+1. 技术前沿
+   - 优先：涉及具体 AI/LLM 概念、机制、架构、新模型发布
+   - 优先：有"它是如何工作的"可拆解的内容
+   - 降权：纯产品发布公告、无机制可挖的工具推介
+
+2. 科普选题
+   - 优先：AI/经济现象有反直觉的"机制层"可挖
+   - 优先：涉及平台逻辑、决策行为、AI 社会影响
+   - 标准：读完后能形成一个判断句式的结论（定义型或反转型）
+   - 降权：纯现象描述、没有结构性解读空间的新闻
+
+3. 行业动态
+   - 优先：具体公司动作、政策变化、资本市场信号
+   - 优先：大模型公司战略、AI 监管、裁员/融资/并购
+   - 降权：活动预告、产品更新日志类内容
+
+4. 消费者行为
+   - 优先：美国消费者场景溢价、情绪消费、身份认同相关
+   - 优先：DTC 品牌动态、零售渠道结构变化、Amazon 行为信号
+   - 优先：实体零售 vs 电商消费习惯对比、新兴品类需求信号
+   - 降权：泛泛的"AI 改变零售"、与消费行为无关的纯技术文章
+
+只返回 JSON 数组，格式如下，不要其他文字。reason 必须说明"为什么这篇适合这个方向"，不只是复述标题：
 [
-  { "index": 0, "category": "技术前沿", "reason": "一句话说明为什么值得关注" },
-  { "index": 1, "category": "科普选题", "reason": "一句话说明为什么值得关注" },
-  { "index": 2, "category": "行业动态", "reason": "一句话说明为什么值得关注" }
+  { "index": 0, "category": "技术前沿", "reason": "..." },
+  { "index": 1, "category": "科普选题", "reason": "..." },
+  { "index": 2, "category": "行业动态", "reason": "..." },
+  { "index": 3, "category": "消费者行为", "reason": "..." }
 ]`;
 
   const response = await client.chat.completions.create({
@@ -53,7 +73,7 @@ ${list}
     const obj = JSON.parse(raw);
     parsed = Array.isArray(obj) ? obj : (obj.picks ?? obj.results ?? Object.values(obj)[0]);
   } catch {
-    console.warn('[警告] DeepSeek 返回格式解析失败，跳过今日精选');
+    console.warn('[警告] DeepSeek 返回格式解析失败，跳过本周精选');
     return [];
   }
 

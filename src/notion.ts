@@ -4,7 +4,7 @@ import type { Article } from './types.js';
 import type { Pick } from './curator.js';
 
 const WEEKLY_REPORT_PARENT_ID = '36461f64-7b06-8183-be37-f93d5a9e3b77';
-const SIGNAL_DATABASE_ID = 'a4b122ab-34cf-4158-8e27-e2f005137bf8';
+const SIGNAL_DATABASE_ID = '36561f64-7b06-801f-96d3-cb2cd9958206';
 
 function getISOWeek(date: Date): { year: number; week: number } {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));

@@ -144,7 +144,7 @@ export async function writeSignalEntries(picks: Pick[], now: Date): Promise<void
       linkedPara(pick.article.title, pick.article.link),
       divider(),
       h2('📌 核心信号'),
-      para(pick.reason),
+      para(pick.reason ?? ''),
       divider(),
       h2('🎯 对中国品牌的意义'),
       para(pick.insight ?? ''),
@@ -161,7 +161,7 @@ export async function writeSignalEntries(picks: Pick[], now: Date): Promise<void
       properties: {
         标题: { title: [{ text: { content: titleText } }] },
         方向: { select: { name: pick.category } },
-        核心信号: { rich_text: [{ text: { content: pick.reason } }] },
+        核心信号: { rich_text: [{ text: { content: pick.reason ?? '' } }] },
         来源: { rich_text: [{ text: { content: pick.article.source } }] },
         原文链接: { url: pick.article.link },
         发布日期: { date: { start: pubDate } },

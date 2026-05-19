@@ -27,8 +27,12 @@ async function run() {
   }
   console.log(`✓ 周报已写入：${filepath}`);
 
-  await syncWeeklyReport(picks, articles, now);
-  await writeSignalEntries(picks, now);
+  await syncWeeklyReport(picks, articles, now).catch((e) =>
+    console.warn('[警告] Notion 周报同步失败：', e.message)
+  );
+  await writeSignalEntries(picks, now).catch((e) =>
+    console.warn('[警告] Notion 信号数据库写入失败：', e.message)
+  );
 }
 
 const isCron = process.argv.includes('--cron');

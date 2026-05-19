@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { Article } from './types.js';
 import type { Pick } from './curator.js';
-import { syncToNotion } from './notion.js';
 
 function getISOWeek(date: Date): { year: number; week: number } {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -42,8 +41,10 @@ export function generateReport(articles: Article[], now: Date, picks: Pick[] = [
     lines.push('## 本周精选', '');
     for (const pick of picks) {
       if (pick.category) lines.push(`**${pick.category}**`);
+      if (pick.chineseTitle) lines.push(`${pick.chineseTitle}`);
       lines.push(`**[${pick.article.title}](${pick.article.link})**`);
-      lines.push(`> ${pick.reason}`);
+      if (pick.reason) lines.push(`> ${pick.reason}`);
+      if (pick.insight) lines.push(`> ${pick.insight}`);
       lines.push(`来源：${pick.article.source} · ${toDateStr(pick.article.pubDate)} ${toTimeStr(pick.article.pubDate)}`);
       lines.push('');
     }
@@ -68,15 +69,12 @@ export function generateReport(articles: Article[], now: Date, picks: Pick[] = [
   return lines.join('\n');
 }
 
-export async function writeReport(content: string, now: Date): Promise<string> {
+export function writeReport(content: string, now: Date): string {
   const outputDir = path.resolve('output');
   fs.mkdirSync(outputDir, { recursive: true });
 
   const filename = `${toWeekStr(now)}.md`;
   const filepath = path.join(outputDir, filename);
   fs.writeFileSync(filepath, content, 'utf-8');
-
-  await syncToNotion(content, now);
-
   return filepath;
 }

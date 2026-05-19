@@ -5,6 +5,8 @@ export interface Pick {
   article: Article;
   category: string;
   reason: string;
+  chineseTitle?: string;
+  insight?: string;
 }
 
 export async function pickTopArticles(articles: Article[], n = 4): Promise<Pick[]> {
@@ -51,12 +53,17 @@ ${list}
    - 优先：实体零售 vs 电商消费习惯对比、新兴品类需求信号
    - 降权：泛泛的"AI 改变零售"、与消费行为无关的纯技术文章
 
-只返回 JSON 数组，格式如下，不要其他文字。reason 必须说明"为什么这篇适合这个方向"，不只是复述标题：
+返回规则：
+- reason 必须说明"为什么这篇适合这个方向"，不只是复述标题
+- 行业动态和消费者行为额外提供 chineseTitle（准确的中文标题翻译）和 insight（从中国品牌进入北美零售渠道的视角，用100字解读这篇文章对供应商或品牌主的实际意义，语言精练，直接给结论，不废话）
+- 技术前沿和科普选题不需要 chineseTitle 和 insight 字段
+
+只返回 JSON 数组，不要其他文字：
 [
   { "index": 0, "category": "技术前沿", "reason": "..." },
   { "index": 1, "category": "科普选题", "reason": "..." },
-  { "index": 2, "category": "行业动态", "reason": "..." },
-  { "index": 3, "category": "消费者行为", "reason": "..." }
+  { "index": 2, "category": "行业动态", "reason": "...", "chineseTitle": "...", "insight": "..." },
+  { "index": 3, "category": "消费者行为", "reason": "...", "chineseTitle": "...", "insight": "..." }
 ]`;
 
   const response = await client.chat.completions.create({
@@ -68,7 +75,7 @@ ${list}
 
   const raw = response.choices[0].message.content ?? '{}';
 
-  let parsed: { index: number; category: string; reason: string }[];
+  let parsed: { index: number; category: string; reason: string; chineseTitle?: string; insight?: string }[];
   try {
     const obj = JSON.parse(raw);
     parsed = Array.isArray(obj) ? obj : (obj.picks ?? obj.results ?? Object.values(obj)[0]);
@@ -80,5 +87,11 @@ ${list}
   return parsed
     .filter((p) => typeof p.index === 'number' && articles[p.index])
     .slice(0, n)
-    .map((p) => ({ article: articles[p.index], category: p.category ?? '', reason: p.reason }));
+    .map((p) => ({
+      article: articles[p.index],
+      category: p.category ?? '',
+      reason: p.reason,
+      chineseTitle: p.chineseTitle,
+      insight: p.insight,
+    }));
 }

@@ -3,6 +3,7 @@ import cron from 'node-cron';
 import { fetchAllArticles } from './fetcher.js';
 import { generateReport, writeReport } from './formatter.js';
 import { pickTopArticles } from './curator.js';
+import { syncWeeklyReport, writeSignalEntries } from './notion.js';
 
 async function run() {
   console.log(`[${new Date().toLocaleString('zh-CN')}] 正在抓取过去 7 天的 AI 零售情报...`);
@@ -19,12 +20,15 @@ async function run() {
 
   const now = new Date();
   const report = generateReport(articles, now, picks);
-  const filepath = await writeReport(report, now);
+  const filepath = writeReport(report, now);
 
   if (picks.length > 0) {
     console.log(`✓ 本周精选 ${picks.length} 篇`);
   }
   console.log(`✓ 周报已写入：${filepath}`);
+
+  await syncWeeklyReport(picks, articles, now);
+  await writeSignalEntries(picks, now);
 }
 
 const isCron = process.argv.includes('--cron');

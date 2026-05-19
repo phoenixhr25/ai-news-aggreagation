@@ -49,7 +49,12 @@ npx tsx src/index.ts --cron
 
 ## Notion 同步
 
-每次运行后自动在父页面下新建子页面，标题格式：`AI零售情报周报 · 2026-W21`。
+每次运行写入两个目标：
+
+| 目标 | 内容 | 分类 |
+|---|---|---|
+| **AI情报周报**（子页面） | 技术前沿 + 科普选题精选 + 全部文章 | 每周新建一页 |
+| **本周精选信号**（数据库） | 行业动态 + 消费者行为精选，含中文标题、核心信号、对中国品牌的意义 | 每条写入一行 |
 
 未配置 `NOTION_TOKEN` 时跳过同步，不报错。
 
@@ -60,24 +65,39 @@ npx tsx src/index.ts --cron
 前往 [notion.so/my-integrations](https://www.notion.so/my-integrations) → New integration → 填写名称 → 提交。
 复制生成的 **Internal Integration Token**，即 `NOTION_TOKEN`。
 
-**2. 准备父页面**
+**2. 准备周报父页面**
 
-在 Notion 里新建或选择一个页面作为父页面。打开该页面，点击右上角 `...` → **Connect to** → 选择刚创建的 Integration，完成授权。
+新建或选择一个页面作为周报的父页面。打开该页面，点击右上角 `...` → **Connections** → 选择刚创建的 Integration，完成授权。
 
-**3. 获取父页面 ID**
-
-从页面 URL 复制最后一段（32位字符串），即 `NOTION_PAGE_ID`：
+从页面 URL 复制末尾的 32 位 ID，填入 `notion.ts` 的 `WEEKLY_REPORT_PARENT_ID`：
 ```
-https://notion.so/My-Page-abc123def456...7890
-                   ↑ 这一段去掉连字符后就是 PAGE_ID
+https://notion.so/My-Page-abc123def456...
+                            ↑ 这段就是 ID
 ```
+
+**3. 准备信号数据库**
+
+新建一个数据库，需包含以下字段：
+
+| 字段名 | 类型 |
+|---|---|
+| 标题 | Title |
+| 方向 | Select（选项：行业动态、消费者行为） |
+| 核心信号 | Text |
+| 来源 | Text |
+| 原文链接 | URL |
+| 发布日期 | Date |
+| 来源周报 | Text |
+
+打开数据库页面，点击右上角 `...` → **Connections** → 添加 Integration 授权。
+
+从数据库 URL 复制末尾的 32 位 ID，填入 `notion.ts` 的 `SIGNAL_DATABASE_ID`。
 
 **4. 写入配置**
 
 本地运行时写入 `.env`：
 ```bash
 echo "NOTION_TOKEN=secret_xxx" >> .env
-echo "NOTION_PAGE_ID=abc123def456..." >> .env
 ```
 
 GitHub Actions 时在 Repository secrets 里添加同名变量（见下方）。
@@ -92,7 +112,6 @@ GitHub Actions 时在 Repository secrets 里添加同名变量（见下方）。
 |---|---|
 | `DEEPSEEK_API_KEY` | DeepSeek API key，用于生成本周精选 |
 | `NOTION_TOKEN` | Notion Integration token |
-| `NOTION_PAGE_ID` | 目标父页面 ID（从页面 URL 末尾获取） |
 
 ## 项目结构
 
@@ -102,7 +121,7 @@ src/
 ├── fetcher.ts    # RSS 抓取、7天过滤、AI关键词过滤、去重
 ├── curator.ts    # DeepSeek 四方向精选
 ├── formatter.ts  # Markdown 生成与文件写入
-├── notion.ts     # Notion 子页面同步
+├── notion.ts     # Notion 周报子页面 + 信号数据库写入
 └── types.ts      # Article 类型定义
 output/           # 生成的周报（由 GitHub Actions 提交）
 ```

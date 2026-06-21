@@ -75,7 +75,7 @@ output/           # 生成的周报（由 GitHub Actions 提交）
 
 文件：`.github/workflows/daily.yml`
 
-- 每周一 00:00 UTC（08:00 CST）自动触发
+- 每周六 00:00 UTC（08:00 CST）自动触发
 - 运行 `npx tsx src/index.ts`，将 `output/` 目录提交到仓库
 
 需在仓库 **Settings → Secrets → Actions** 配置：

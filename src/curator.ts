@@ -66,12 +66,25 @@ ${list}
   { "index": 3, "category": "消费者行为", "reason": "...", "chineseTitle": "...", "insight": "..." }
 ]`;
 
-  const response = await client.chat.completions.create({
-    model: 'deepseek-chat',
-    messages: [{ role: 'user', content: prompt }],
-    response_format: { type: 'json_object' },
-    temperature: 0.3,
-  });
+  const response = await (async () => {
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await client.chat.completions.create({
+          model: 'deepseek-chat',
+          messages: [{ role: 'user', content: prompt }],
+          response_format: { type: 'json_object' },
+          temperature: 0.3,
+        });
+      } catch (err: unknown) {
+        if (attempt === maxAttempts) throw err;
+        const waitMs = attempt * 5000;
+        console.warn(`[警告] DeepSeek 请求失败（第 ${attempt} 次），${waitMs / 1000}s 后重试...`, (err as Error).message);
+        await new Promise((r) => setTimeout(r, waitMs));
+      }
+    }
+    throw new Error('unreachable');
+  })();
 
   const raw = response.choices[0].message.content ?? '{}';
 

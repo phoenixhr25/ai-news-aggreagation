@@ -72,7 +72,7 @@ export async function syncWeeklyReport(
   const token = process.env.NOTION_TOKEN;
   if (!token) return;
 
-  const notion = new Client({ auth: token });
+  const notion = new Client({ auth: token, fetch: globalThis.fetch });
   const label = weekLabel(now);
   const title = `AI情报周报 · ${label}`;
 
@@ -126,7 +126,7 @@ export async function writeSignalEntries(picks: Pick[], now: Date): Promise<void
   const token = process.env.NOTION_TOKEN;
   if (!token) return;
 
-  const notion = new Client({ auth: token });
+  const notion = new Client({ auth: token, fetch: globalThis.fetch });
   const label = weekLabel(now);
   const weeklyReportRef = `AI情报周报 · ${label}`;
 

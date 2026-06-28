@@ -19,6 +19,7 @@ export async function pickTopArticles(articles: Article[], n = 4): Promise<Pick[
   const client = new OpenAI({
     apiKey,
     baseURL: 'https://api.deepseek.com',
+    fetch: globalThis.fetch,
   });
 
   const list = articles

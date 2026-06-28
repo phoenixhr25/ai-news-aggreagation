@@ -77,14 +77,19 @@ ${list}
           temperature: 0.3,
         });
       } catch (err: unknown) {
-        if (attempt === maxAttempts) throw err;
+        if (attempt === maxAttempts) {
+          console.warn('[警告] DeepSeek 三次请求均失败，跳过精选，仅输出文章列表', (err as Error).message);
+          return null;
+        }
         const waitMs = attempt * 5000;
         console.warn(`[警告] DeepSeek 请求失败（第 ${attempt} 次），${waitMs / 1000}s 后重试...`, (err as Error).message);
         await new Promise((r) => setTimeout(r, waitMs));
       }
     }
-    throw new Error('unreachable');
+    return null;
   })();
+
+  if (!response) return [];
 
   const raw = response.choices[0].message.content ?? '{}';
 

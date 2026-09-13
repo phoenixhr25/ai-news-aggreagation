@@ -97,9 +97,22 @@ ${list}
   let parsed: { index: number; category: string; reason: string; chineseTitle?: string; insight?: string }[];
   try {
     const obj = JSON.parse(raw);
-    parsed = Array.isArray(obj) ? obj : (obj.picks ?? obj.results ?? Object.values(obj)[0]);
+    if (Array.isArray(obj)) {
+      parsed = obj;
+    } else {
+      // json_object 模式强制返回对象，DeepSeek 包裹数组用的 key 名不固定
+      // （见过 picks/results，也见过其他名字），所以不猜 key 名，
+      // 直接找对象里第一个值是数组的属性。
+      const arrayValue = Object.values(obj).find(Array.isArray);
+      parsed = (arrayValue as typeof parsed | undefined) ?? [];
+    }
   } catch {
     console.warn('[警告] DeepSeek 返回格式解析失败，跳过本周精选');
+    return [];
+  }
+
+  if (!Array.isArray(parsed)) {
+    console.warn('[警告] DeepSeek 返回内容里找不到精选数组，跳过本周精选');
     return [];
   }
 
